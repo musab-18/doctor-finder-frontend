@@ -1,0 +1,52 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: doctor-finder-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: your_password
+      POSTGRES_DB: doctor_finder
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend/backend
+      dockerfile: Dockerfile
+    container_name: doctor-finder-backend
+    ports:
+      - "3001:3001"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: your_password
+      DB_DATABASE: doctor_finder
+      JWT_SECRET: your-secret-key
+      JWT_EXPIRATION: 7d
+      NODE_ENV: production
+      PORT: 3001
+    depends_on:
+      - postgres
+    restart: always
+
+  frontend:
+    build:
+      context: ./frontend/doctor-finder-app
+      dockerfile: Dockerfile
+    container_name: doctor-finder-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      NODE_ENV: production
+    depends_on:
+      - backend
+    restart: always
+
+volumes:
+  postgres_data:
