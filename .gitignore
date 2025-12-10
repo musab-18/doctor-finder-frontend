@@ -1,0 +1,8 @@
+node_modules
+.DS_Store
+dist
+.env
+build
+coverage
+backend.log
+deploy_local_native.sh
