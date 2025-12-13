@@ -1,9 +1,43 @@
+databases:
+  - name: doctor-finder-db
+    databaseName: doctor_finder
+    user: doctor_finder_user
+    plan: free
+
 services:
   - type: web
     name: doctor-finder-backend
-    env: node
+    runtime: node
+    plan: free
     buildCommand: npm install && npm run build
     startCommand: npm run start:prod
+    healthCheckPath: /api
     envVars:
       - key: NODE_ENV
         value: production
+      - key: PORT
+        value: 3001
+      - key: DB_HOST
+        fromDatabase:
+          name: doctor-finder-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: doctor-finder-db
+          property: port
+      - key: DB_USERNAME
+        fromDatabase:
+          name: doctor-finder-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: doctor-finder-db
+          property: password
+      - key: DB_DATABASE
+        fromDatabase:
+          name: doctor-finder-db
+          property: database
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRATION
+        value: 7d

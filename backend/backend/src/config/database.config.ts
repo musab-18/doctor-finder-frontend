@@ -8,5 +8,6 @@ export default registerAs('database', () => ({
   password: process.env.DB_PASSWORD || 'postgres',
   database: process.env.DB_DATABASE || 'doctor_finder',
   autoLoadEntities: true,
-  synchronize: process.env.NODE_ENV !== 'production' || true, // Always true in development
+  synchronize: true, // Creates tables automatically
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 }));

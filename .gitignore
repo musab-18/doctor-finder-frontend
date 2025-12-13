@@ -6,3 +6,4 @@ build
 coverage
 backend.log
 deploy_local_native.sh
+.vercel

@@ -6,10 +6,14 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Enable CORS
+  // Enable CORS for all origins in production (Vercel frontend)
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://localhost:3001'],
+    origin: process.env.NODE_ENV === 'production' 
+      ? true  // Allow all origins in production (or specify your Vercel domain)
+      : ['http://localhost:3000', 'http://localhost:3001'],
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
   // Global validation pipe
