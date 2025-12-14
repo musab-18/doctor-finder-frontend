@@ -62,7 +62,12 @@ export default function AdminDoctorsPage() {
     city: '',
     consultationFee: '',
     specializationId: '',
+    availableDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+    availableTimeStart: '09:00',
+    availableTimeEnd: '17:00',
   });
+  
+  const allDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const [formLoading, setFormLoading] = useState(false);
 
   useEffect(() => {
@@ -111,6 +116,15 @@ export default function AdminDoctorsPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleDayToggle = (day) => {
+    setFormData(prev => ({
+      ...prev,
+      availableDays: prev.availableDays.includes(day)
+        ? prev.availableDays.filter(d => d !== day)
+        : [...prev.availableDays, day]
+    }));
+  };
+
   const handleAddDoctor = async (e) => {
     e.preventDefault();
     setFormLoading(true);
@@ -119,6 +133,9 @@ export default function AdminDoctorsPage() {
         ...formData,
         experience: parseInt(formData.experience),
         consultationFee: parseFloat(formData.consultationFee),
+        availableDays: formData.availableDays,
+        availableTimeStart: formData.availableTimeStart,
+        availableTimeEnd: formData.availableTimeEnd,
       });
       setDoctors([...doctors, newDoctor]);
       setShowAddModal(false);
@@ -150,6 +167,9 @@ export default function AdminDoctorsPage() {
         ...formData,
         experience: parseInt(formData.experience),
         consultationFee: parseFloat(formData.consultationFee),
+        availableDays: formData.availableDays,
+        availableTimeStart: formData.availableTimeStart,
+        availableTimeEnd: formData.availableTimeEnd,
       });
       setDoctors(doctors.map(d => d.id === selectedDoctor.id ? { ...d, ...updatedDoctor } : d));
       setShowEditModal(false);
@@ -211,6 +231,9 @@ export default function AdminDoctorsPage() {
       city: doctor.city || '',
       consultationFee: doctor.consultationFee?.toString() || '',
       specializationId: doctor.specializationId || '',
+      availableDays: doctor.availableDays || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+      availableTimeStart: doctor.availableTimeStart || '09:00',
+      availableTimeEnd: doctor.availableTimeEnd || '17:00',
     });
     setShowEditModal(true);
   };
@@ -229,6 +252,9 @@ export default function AdminDoctorsPage() {
       city: '',
       consultationFee: '',
       specializationId: '',
+      availableDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+      availableTimeStart: '09:00',
+      availableTimeEnd: '17:00',
     });
     setSelectedDoctor(null);
   };
@@ -344,6 +370,51 @@ export default function AdminDoctorsPage() {
                     <Label>Bio</Label>
                     <Textarea name="bio" value={formData.bio} onChange={handleInputChange} rows={3} />
                   </div>
+                  
+                  {/* Availability Section */}
+                  <div className="space-y-4 border-t pt-4 mt-4">
+                    <h3 className="font-semibold text-slate-900">Availability Settings</h3>
+                    <div className="space-y-2">
+                      <Label>Available Days</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {allDays.map((day) => (
+                          <button
+                            key={day}
+                            type="button"
+                            onClick={() => handleDayToggle(day)}
+                            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                              formData.availableDays.includes(day)
+                                ? 'bg-teal-500 text-white'
+                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                            }`}
+                          >
+                            {day.slice(0, 3)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Start Time</Label>
+                        <Input
+                          name="availableTimeStart"
+                          type="time"
+                          value={formData.availableTimeStart}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>End Time</Label>
+                        <Input
+                          name="availableTimeEnd"
+                          type="time"
+                          value={formData.availableTimeEnd}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="flex gap-3 pt-4">
                     <Button type="button" variant="outline" onClick={() => { setShowAddModal(false); resetForm(); }} className="flex-1">Cancel</Button>
                     <Button type="submit" className="flex-1 bg-teal-500 hover:bg-teal-600" disabled={formLoading}>
@@ -527,6 +598,51 @@ export default function AdminDoctorsPage() {
                 <Label>Bio</Label>
                 <Textarea name="bio" value={formData.bio} onChange={handleInputChange} rows={3} />
               </div>
+              
+              {/* Availability Section */}
+              <div className="space-y-4 border-t pt-4 mt-4">
+                <h3 className="font-semibold text-slate-900">Availability Settings</h3>
+                <div className="space-y-2">
+                  <Label>Available Days</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {allDays.map((day) => (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => handleDayToggle(day)}
+                        className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                          formData.availableDays.includes(day)
+                            ? 'bg-teal-500 text-white'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                      >
+                        {day.slice(0, 3)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Start Time</Label>
+                    <Input
+                      name="availableTimeStart"
+                      type="time"
+                      value={formData.availableTimeStart}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>End Time</Label>
+                    <Input
+                      name="availableTimeEnd"
+                      type="time"
+                      value={formData.availableTimeEnd}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div className="flex gap-3 pt-4">
                 <Button type="button" variant="outline" onClick={() => { setShowEditModal(false); resetForm(); }} className="flex-1">Cancel</Button>
                 <Button type="submit" className="flex-1 bg-teal-500 hover:bg-teal-600" disabled={formLoading}>
