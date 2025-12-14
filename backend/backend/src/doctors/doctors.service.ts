@@ -24,7 +24,17 @@ export class DoctorsService {
       throw new ConflictException('Doctor with this email already exists');
     }
 
-    const doctor = this.doctorRepository.create(createDoctorDto);
+    // Set default availability if not provided
+    const doctorData = {
+      ...createDoctorDto,
+      availableDays: createDoctorDto.availableDays || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+      availableTimeStart: createDoctorDto.availableTimeStart || '09:00',
+      availableTimeEnd: createDoctorDto.availableTimeEnd || '17:00',
+      languages: createDoctorDto.languages || ['English', 'Urdu'],
+      isActive: createDoctorDto.isActive ?? true,
+    };
+
+    const doctor = this.doctorRepository.create(doctorData);
     return this.doctorRepository.save(doctor);
   }
 
