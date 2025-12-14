@@ -3,6 +3,7 @@ export * from './doctor.entity';
 export * from './specialization.entity';
 export * from './appointment.entity';
 export * from './contact.entity';
+export * from './review.entity';
 
 
 

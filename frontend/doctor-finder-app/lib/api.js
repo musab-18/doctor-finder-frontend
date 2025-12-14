@@ -278,6 +278,46 @@ class ApiService {
       method: 'PATCH',
     });
   }
+
+  // Reviews endpoints
+  async createReview(reviewData) {
+    return this.request('/reviews', {
+      method: 'POST',
+      body: JSON.stringify(reviewData),
+    });
+  }
+
+  async getDoctorReviews(doctorId) {
+    return this.request(`/reviews/doctor/${doctorId}`);
+  }
+
+  async getDoctorReviewStats(doctorId) {
+    return this.request(`/reviews/doctor/${doctorId}/stats`);
+  }
+
+  async getMyReviews() {
+    return this.request('/reviews/my-reviews');
+  }
+
+  async updateReview(id, reviewData) {
+    return this.request(`/reviews/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(reviewData),
+    });
+  }
+
+  async deleteReview(id) {
+    return this.request(`/reviews/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async addDoctorReply(reviewId, reply) {
+    return this.request(`/reviews/${reviewId}/reply`, {
+      method: 'PATCH',
+      body: JSON.stringify({ doctorReply: reply }),
+    });
+  }
 }
 
 export const api = new ApiService();

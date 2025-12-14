@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogContent,
@@ -32,6 +33,9 @@ import {
   CheckCircle,
   ArrowLeft,
   Loader2,
+  MessageSquare,
+  ThumbsUp,
+  User,
 } from 'lucide-react';
 
 const timeSlots = [
@@ -42,7 +46,7 @@ const timeSlots = [
 export default function DoctorProfilePage({ params }) {
   const { id } = use(params);
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [doctor, setDoctor] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -51,9 +55,19 @@ export default function DoctorProfilePage({ params }) {
   const [bookingLoading, setBookingLoading] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  
+  // Reviews state
+  const [reviews, setReviews] = useState([]);
+  const [reviewStats, setReviewStats] = useState(null);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [hoverRating, setHoverRating] = useState(0);
 
   useEffect(() => {
     fetchDoctor();
+    fetchReviews();
   }, [id]);
 
   const fetchDoctor = async () => {
@@ -65,6 +79,45 @@ export default function DoctorProfilePage({ params }) {
       router.push('/doctors');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchReviews = async () => {
+    try {
+      const [reviewsData, statsData] = await Promise.all([
+        api.getDoctorReviews(id),
+        api.getDoctorReviewStats(id),
+      ]);
+      setReviews(reviewsData || []);
+      setReviewStats(statsData);
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    if (!isAuthenticated) {
+      router.push('/login?redirect=/doctors/' + id);
+      return;
+    }
+
+    setReviewLoading(true);
+    try {
+      await api.createReview({
+        doctorId: id,
+        rating: reviewRating,
+        comment: reviewComment,
+      });
+      setShowReviewModal(false);
+      setReviewRating(5);
+      setReviewComment('');
+      fetchReviews();
+      fetchDoctor();
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      alert(error.message || 'Failed to submit review');
+    } finally {
+      setReviewLoading(false);
     }
   };
 
@@ -238,8 +291,211 @@ export default function DoctorProfilePage({ params }) {
                       <a href={`mailto:${doctor.email}`} className="flex items-center gap-2 text-slate-600 hover:text-teal-600">
                         <Mail className="w-5 h-5" />
                         {doctor.email}
-                      </a>
+                              </a>
                     </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Reviews Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <Card className="border-0 shadow-xl">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <MessageSquare className="w-5 h-5 text-teal-600" />
+                      Patient Reviews
+                    </CardTitle>
+                    <Dialog open={showReviewModal} onOpenChange={setShowReviewModal}>
+                      <DialogTrigger asChild>
+                        <Button 
+                          className="bg-teal-500 hover:bg-teal-600"
+                          onClick={() => {
+                            if (!isAuthenticated) {
+                              router.push('/login?redirect=/doctors/' + id);
+                            }
+                          }}
+                        >
+                          Write a Review
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Write a Review</DialogTitle>
+                          <DialogDescription>
+                            Share your experience with Dr. {doctor?.firstName} {doctor?.lastName}
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                          {/* Star Rating */}
+                          <div>
+                            <label className="text-sm font-medium text-slate-700 mb-2 block">
+                              Your Rating
+                            </label>
+                            <div className="flex gap-1">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <button
+                                  key={star}
+                                  type="button"
+                                  onMouseEnter={() => setHoverRating(star)}
+                                  onMouseLeave={() => setHoverRating(0)}
+                                  onClick={() => setReviewRating(star)}
+                                  className="p-1 transition-transform hover:scale-110"
+                                >
+                                  <Star
+                                    className={`w-8 h-8 ${
+                                      star <= (hoverRating || reviewRating)
+                                        ? 'text-amber-400 fill-amber-400'
+                                        : 'text-slate-300'
+                                    }`}
+                                  />
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          {/* Comment */}
+                          <div>
+                            <label className="text-sm font-medium text-slate-700 mb-2 block">
+                              Your Review
+                            </label>
+                            <Textarea
+                              placeholder="Share your experience with this doctor..."
+                              value={reviewComment}
+                              onChange={(e) => setReviewComment(e.target.value)}
+                              rows={4}
+                            />
+                          </div>
+                        </div>
+                        <div className="flex gap-3">
+                          <Button
+                            variant="outline"
+                            className="flex-1"
+                            onClick={() => setShowReviewModal(false)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            className="flex-1 bg-teal-500 hover:bg-teal-600"
+                            onClick={handleSubmitReview}
+                            disabled={reviewLoading}
+                          >
+                            {reviewLoading ? (
+                              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                            ) : null}
+                            Submit Review
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {/* Rating Summary */}
+                  {reviewStats && (
+                    <div className="flex flex-col md:flex-row gap-6 mb-6 p-4 bg-slate-50 rounded-xl">
+                      <div className="text-center">
+                        <div className="text-4xl font-bold text-slate-900">{reviewStats.averageRating}</div>
+                        <div className="flex justify-center gap-0.5 my-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className={`w-4 h-4 ${
+                                star <= Math.round(reviewStats.averageRating)
+                                  ? 'text-amber-400 fill-amber-400'
+                                  : 'text-slate-300'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <div className="text-sm text-slate-500">{reviewStats.totalReviews} reviews</div>
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        {[5, 4, 3, 2, 1].map((rating) => (
+                          <div key={rating} className="flex items-center gap-2">
+                            <span className="text-sm text-slate-600 w-3">{rating}</span>
+                            <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+                            <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-amber-400 rounded-full"
+                                style={{
+                                  width: `${reviewStats.totalReviews > 0 ? (reviewStats.ratingDistribution[rating] / reviewStats.totalReviews) * 100 : 0}%`,
+                                }}
+                              />
+                            </div>
+                            <span className="text-sm text-slate-500 w-8">
+                              {reviewStats.ratingDistribution[rating]}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Reviews List */}
+                  <div className="space-y-4">
+                    {reviews.length === 0 ? (
+                      <div className="text-center py-8 text-slate-500">
+                        <MessageSquare className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                        <p>No reviews yet. Be the first to review!</p>
+                      </div>
+                    ) : (
+                      reviews.map((review) => (
+                        <div key={review.id} className="border-b border-slate-100 pb-4 last:border-0">
+                          <div className="flex items-start gap-3">
+                            <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold">
+                              {review.user?.firstName?.[0] || <User className="w-5 h-5" />}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="font-medium text-slate-900">
+                                    {review.user?.firstName} {review.user?.lastName}
+                                  </p>
+                                  <div className="flex items-center gap-2">
+                                    <div className="flex gap-0.5">
+                                      {[1, 2, 3, 4, 5].map((star) => (
+                                        <Star
+                                          key={star}
+                                          className={`w-3 h-3 ${
+                                            star <= review.rating
+                                              ? 'text-amber-400 fill-amber-400'
+                                              : 'text-slate-300'
+                                          }`}
+                                        />
+                                      ))}
+                                    </div>
+                                    {review.isVerified && (
+                                      <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                                        <CheckCircle className="w-3 h-3 mr-1" />
+                                        Verified
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </div>
+                                <span className="text-sm text-slate-400">
+                                  {new Date(review.createdAt).toLocaleDateString()}
+                                </span>
+                              </div>
+                              {review.comment && (
+                                <p className="text-slate-600 mt-2">{review.comment}</p>
+                              )}
+                              {review.doctorReply && (
+                                <div className="mt-3 pl-4 border-l-2 border-teal-500 bg-teal-50 p-3 rounded-r-lg">
+                                  <p className="text-sm font-medium text-teal-700">Doctor's Response:</p>
+                                  <p className="text-sm text-slate-600">{review.doctorReply}</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </CardContent>
               </Card>

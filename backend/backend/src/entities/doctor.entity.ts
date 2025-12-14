@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { Specialization } from './specialization.entity';
 import { Appointment } from './appointment.entity';
+import { Review } from './review.entity';
 
 @Entity('doctors')
 export class Doctor {
@@ -85,6 +86,9 @@ export class Doctor {
 
   @OneToMany(() => Appointment, (appointment) => appointment.doctor)
   appointments: Appointment[];
+
+  @OneToMany(() => Review, (review) => review.doctor)
+  reviews: Review[];
 
   @CreateDateColumn()
   createdAt: Date;
