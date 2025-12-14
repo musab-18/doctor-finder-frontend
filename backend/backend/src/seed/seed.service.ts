@@ -18,7 +18,11 @@ export class SeedService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    await this.seedData();
+    try {
+      await this.seedData();
+    } catch (error) {
+      console.error('Failed to seed database:', error.message);
+    }
   }
 
   async seedData() {

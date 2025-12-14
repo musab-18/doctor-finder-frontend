@@ -10,6 +10,11 @@ import { SpecializationsModule } from './specializations/specializations.module'
 import { AppointmentsModule } from './appointments/appointments.module';
 import { ContactsModule } from './contacts/contacts.module';
 import { SeedModule } from './seed/seed.module';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { Doctor } from './entities/doctor.entity';
+import { User } from './entities/user.entity';
+import { Specialization } from './entities/specialization.entity';
 
 @Module({
   imports: [
@@ -32,6 +37,7 @@ import { SeedModule } from './seed/seed.module';
       }),
       inject: [ConfigService],
     }),
+    TypeOrmModule.forFeature([Doctor, User, Specialization]),
     AuthModule,
     UsersModule,
     DoctorsModule,
@@ -40,5 +46,7 @@ import { SeedModule } from './seed/seed.module';
     ContactsModule,
     SeedModule,
   ],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}
